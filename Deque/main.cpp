@@ -1,42 +1,11 @@
 #include "base.h"
 #include "deque.h"
 
-template <typename T> class Base
-{
-public:
-    T *q;
-    Base()
-    {
-        q = new T [5];
-        fori(i, 5)
-            q[i] = rand();
-        dbg("Base()");
-    }
-    Base(const Base& obj)
-    {
-        q = obj.q;
-        dbg("Base (const Base& obj)");
-    }
+#include <vld.h>
 
-    Base(Base && obj)
-    {
-        q = obj.q;
-        dbg("Base(Base && obj)");
-    }
-};
-
-Base<int> something()
-{
-    Base<int> object;
-    object.q[0] = -1;
-    object.q[1] = 1;
-    return object;
-}
-
-int main()
+Deque<int> something()
 {
     Deque<int> d;
-    
     fori(i, 20)
     {
         d.push_back(2 * i + 1);
@@ -44,7 +13,16 @@ int main()
 
     fori(i, 10)
         d.push_front(2 * (-i) + 1);
+    
+    return d;
+}
 
+int main()
+{
+    
+    Deque<int> d;
+    
+    d = something();
     fori (i, 30)
     {
         cout << d[i] << ' ';
@@ -52,8 +30,30 @@ int main()
     cout << endl << endl;
     
     //auto q = d.cbegin();
+    
+
+    cout << "for (auto it = d.begin(); it != d.end(); it++)" << endl;
+    for (auto it = d.begin(); it != d.end(); it++)
+        cout << *it << ' ';
+    cout << endl;
+
+    cout << "for (auto it = d.cbegin(); it != d.cend(); it++)" << endl;
     for (auto it = d.cbegin(); it != d.cend(); it++)
         cout << *it << ' ';
+    cout << endl;
+    
+
+    cout << "for (auto it = d.rbegin(); it != d.rend(); it++)" << endl;
+    for (auto it = d.rbegin(); it != d.rend(); it++)
+        cout << *it << ' ';
+    cout << endl;
+
+    cout << "for (auto it = d.crbegin(); it != d.crend(); it++)" << endl;
+    for (auto it = d.crbegin(); it != d.crend(); it++)
+        cout << *it << ' ';
+    cout << endl;
+    
+    
     
     cout << endl << endl;
     
@@ -63,9 +63,7 @@ int main()
         d.pop_back();
     }
     
-
-
-    system("pause");
-
+    system("pause");   
+    
     return 0;
 }

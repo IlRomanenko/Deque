@@ -1,6 +1,7 @@
 #include "base.h"
 #include <vector>
 #include <iterator>
+
 const uint base_capacity = 8;
 
 template <typename T> class Deque;
@@ -102,7 +103,7 @@ public:
 
 template <typename T> class Deque
 {
-    T* buf;
+    unique_ptr<T[]> buf;
     uint capacity, tail, head;
 
     inline uint nextHead()
@@ -125,11 +126,10 @@ template <typename T> class Deque
     void extendCapacity()
     {
         uint new_capacity = capacity << 1;
-        T *tmp = new T[new_capacity];
+        unique_ptr<T[]> tmp = unique_ptr<T[]>(new T[new_capacity]);
         for (uint i = 0; i < capacity; i++)
             tmp[i] = this->operator[](i);
-        delete buf;
-        buf = tmp;    
+        buf.swap(tmp);
         head = 0;
         tail = capacity;
         capacity = new_capacity;
@@ -137,12 +137,11 @@ template <typename T> class Deque
     void compressCapacity()
     {
         uint new_capacity = capacity >> 1;
-        T *tmp = new T[new_capacity];
+        unique_ptr<T[]> tmp = unique_ptr<T[]>(new T[new_capacity]);
         uint size = getSize();
         for (uint i = 0; i < size; i++)
             tmp[i] = this->operator[](i);
-        delete buf;
-        buf = tmp;
+        buf.swap(tmp);
         head = 0;
         tail = size;
         capacity = new_capacity;
@@ -156,10 +155,11 @@ public:
     typedef reverse_iterator<const_iterator>  const_reverse_iterator;
     typedef reverse_iterator<iterator>        reverse_iterator;
 
+
     Deque() 
         : capacity(base_capacity), head(0), tail(0)
     {
-        buf = new T[capacity];
+        buf = unique_ptr<T[]>(new T[capacity]);
         dbg("Deque<T>");
     }
 
@@ -169,7 +169,7 @@ public:
         capacity = base_capacity;
         while (capacity < user_capacity)
             capacity <<= 1;
-        buf = new T[capacity];
+        buf = unique_ptr<T[]>(new T[capacity]);
     }
 
     Deque(const Deque & obj) 
@@ -185,7 +185,7 @@ public:
 
     Deque(Deque && obj) 
     {
-        buf = obj.buf;
+        buf.swap(obj.buf);
         capacity = obj.capacity;
         head = obj.head;
         tail = obj.tail;
@@ -198,8 +198,8 @@ public:
         capacity = obj.capacity;
         head = obj.head;
         tail = obj.tail;
-        delete buf;
-        buf = new T[capacity];
+        buf.release();
+        buf = unique_ptr<T[]>(new T[capacity]);
         for (uint i = 0; i < capacity; i++)
             buf[i] = obj.buf[i];
 
@@ -284,70 +284,74 @@ public:
 
     iterator begin()
     {
-        return iterator(buf + head, head, capacity);
+        return iterator(buf.get() + head, head, capacity);
     }
     iterator begin() const
     {
-        return iterator(buf + head, head, capacity);
+        return iterator(buf.get() + head, head, capacity);
     }
     iterator end()
     {
-        return iterator(buf + tail, tail, capacity);
+        return iterator(buf.get() + tail, tail, capacity);
     }
     iterator end() const
     {
-        return iterator(buf + tail, tail, capacity);
+        return iterator(buf.get() + tail, tail, capacity);
     }
 
     const_iterator cbegin()
     {
-        return const_iterator(buf + head, head, capacity);
+        return const_iterator(buf.get() + head, head, capacity);
     }
     const_iterator cbegin() const
     {
-        return const_iterator(buf + head, head, capacity);
+        return const_iterator(buf.get() + head, head, capacity);
     }
     const_iterator cend()
     {
-        return const_iterator(buf + tail, tail, capacity);
+        return const_iterator(buf.get() + tail, tail, capacity);
     }
     const_iterator cend() const
     {
-        return const_iterator(buf + tail, tail, capacity);
+        return const_iterator(buf.get() + tail, tail, capacity);
     }
 
     reverse_iterator rbegin()
     {
-        return reverse_iterator(iterator(buf + tail, tail, capacity));
+        return reverse_iterator(iterator(buf.get() + tail, tail, capacity));
     }
     reverse_iterator rbegin() const
     {
-        return reverse_iterator(iterator(buf + tail, tail, capacity));
+        return reverse_iterator(iterator(buf.get() + tail, tail, capacity));
     }
     reverse_iterator rend()
     {
-        return reverse_iterator(iterator(buf + head, head, capacity));
+        return reverse_iterator(iterator(buf.get() + head, head, capacity));
     }
     reverse_iterator rend() const
     {
-        return reverse_iterator(iterator(buf + head, head, capacity));
+        return reverse_iterator(iterator(buf.get() + head, head, capacity));
     }
 
     const_reverse_iterator crbegin()
     {
-        return const_reverse_iterator(buf + prevTail(), prevTail(), capacity);
+        return const_reverse_iterator(const_iterator(buf.get() + tail, tail, capacity));
     }
     const_reverse_iterator crbegin() const
     {
-        return const_reverse_iterator(buf + prevTail(), prevTail(), capacity);
+        return const_reverse_iterator(const_iterator(buf.get() + tail, tail, capacity));
     }
     const_reverse_iterator crend()
     {
-        return const_reverse_iterator(buf + nextHead(), nextHead(), capacity);
+        return const_reverse_iterator(const_iterator(buf.get() + head, head, capacity));
     }
     const_reverse_iterator crend() const
     {
-        return const_reverse_iterator(buf + nextHead(), nextHead(), capacity);
+        return const_reverse_iterator(const_iterator(buf.get() + head, head, capacity));
     }
 
+
+    ~Deque()
+    {
+    }
 };
