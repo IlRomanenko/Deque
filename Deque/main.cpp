@@ -52,7 +52,7 @@ int main()
     cout << endl << endl;
     
     //auto q = d.cbegin();
-    for (auto it = d.rbegin(); it != d.rend(); it++)
+    for (auto it = d.cbegin(); it != d.cend(); it++)
         cout << *it << ' ';
     
     cout << endl << endl;

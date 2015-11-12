@@ -6,22 +6,22 @@ const uint base_capacity = 8;
 template <typename T> class Deque;
 
 
-template <typename ContainerType> class container_iterator :
-    public iterator<random_access_iterator_tag, ContainerType>
+template <typename IteratorType, typename ContainerType> class container_iterator :
+    public iterator<random_access_iterator_tag, IteratorType>
 {
 private:
     friend class Deque<ContainerType>;
 
-    ContainerType* ptr;
-    uint cur, size;
+    IteratorType* ptr;
+    int cur, size;
 
-    container_iterator(ContainerType* n_ptr, uint head, uint capacity) 
+    container_iterator(IteratorType* n_ptr, uint head, uint capacity) 
         : ptr(n_ptr), cur(head), size(capacity)
     {
     }
 
 public:
-
+    
     container_iterator(const container_iterator &it)
     {
         ptr = it.ptr;
@@ -36,7 +36,7 @@ public:
         size = it.size;
     }
 
-    ContainerType& operator *()
+    IteratorType& operator *()
     {
         return *ptr;
     }
@@ -68,28 +68,28 @@ public:
     container_iterator& operator--()
     {
         ptr--;
-        if (cur == 0)
+        cur--;
+        if (cur < 0)
         {
             ptr += size;
             cur += size;
         }
-        cur--;
         return *this;
     }
 
     container_iterator& operator--(int)
     {
         ptr--;
-        if (cur == 0)
+        cur--;
+        if (cur < 0)
         {
             ptr += size;
             cur += size;
         }
-        cur --;
         return *this;
     }
 
-    bool operator != (const container_iterator &it)
+    bool operator != (const container_iterator &it) const
     {
         return ptr != it.ptr;
     }
@@ -150,8 +150,8 @@ template <typename T> class Deque
 
 public:
 
-    typedef container_iterator<T>       iterator;
-    typedef container_iterator<const T> const_iterator;
+    typedef container_iterator<T, T>       iterator;
+    typedef container_iterator<const T, T> const_iterator;
 
     typedef reverse_iterator<const_iterator>  const_reverse_iterator;
     typedef reverse_iterator<iterator>        reverse_iterator;
