@@ -1,3 +1,4 @@
+#pragma once
 #include "base.h"
 #include <vector>
 #include <iterator>
@@ -46,10 +47,10 @@ public:
     {
         ptr++;
         cur++;
-        if (cur >= size)
+        if (cur == size)
         {
-            ptr -= (cur / size) * size;
-            cur -= (cur / size) * size;
+            ptr -= size;
+            cur -= size;
         }
         return *this;
     }
@@ -99,6 +100,10 @@ public:
     {
         return ptr == it.ptr;
     }
+
+    ~container_iterator()
+    {
+    }
 };
 
 template <typename T> class Deque
@@ -106,19 +111,19 @@ template <typename T> class Deque
     unique_ptr<T[]> buf;
     uint capacity, tail, head;
 
-    inline uint nextHead()
+    inline uint nextHead() const
     {
         return (head - 1 + capacity) % capacity;
     }
-    inline uint nextTail()
+    inline uint nextTail() const
     {
         return (tail + 1) % capacity;
     }
-    inline uint prevHead()
+    inline uint prevHead() const
     {
         return (head + 1) % capacity;
     }
-    inline uint prevTail()
+    inline uint prevTail() const
     {
         return (tail - 1 + capacity) % capacity;
     }
@@ -151,14 +156,16 @@ public:
 
     typedef container_iterator<T, T>       iterator;
     typedef container_iterator<const T, T> const_iterator;
-
+    
     typedef reverse_iterator<const_iterator>  const_reverse_iterator;
     typedef reverse_iterator<iterator>        reverse_iterator;
 
+    //const_reverse_iterator <~> reverse_iterator<container_iterator<const T, T> >
 
     Deque() 
         : capacity(base_capacity), head(0), tail(0)
     {
+        buf.reset();
         buf = unique_ptr<T[]>(new T[capacity]);
         dbg("Deque<T>");
     }
@@ -166,6 +173,7 @@ public:
     Deque(uint user_capacity) 
         : head(0), tail(0)
     {
+        buf.reset();
         capacity = base_capacity;
         while (capacity < user_capacity)
             capacity <<= 1;
@@ -175,7 +183,7 @@ public:
     Deque(const Deque & obj) 
         : capacity(obj.capacity), head(obj.head), tail(obj.tail)
     {
-        delete buf;
+        buf.reset();
         buf = new T[capacity];
         for (uint i = 0; i < capacity; i++)
             buf[i] = obj.buf[i];
@@ -185,6 +193,7 @@ public:
 
     Deque(Deque && obj) 
     {
+        buf.reset();
         buf.swap(obj.buf);
         capacity = obj.capacity;
         head = obj.head;
@@ -198,7 +207,7 @@ public:
         capacity = obj.capacity;
         head = obj.head;
         tail = obj.tail;
-        buf.release();
+        buf.reset();
         buf = unique_ptr<T[]>(new T[capacity]);
         for (uint i = 0; i < capacity; i++)
             buf[i] = obj.buf[i];
@@ -214,6 +223,8 @@ public:
 
     int getSize() const
     {
+        if (tail >= head)
+            return prevTail() - head + 1;
         return (tail - head + capacity);
     }
 

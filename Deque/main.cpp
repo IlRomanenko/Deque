@@ -1,7 +1,12 @@
 #include "base.h"
 #include "deque.h"
-
 #include <vld.h>
+#include <gtest\gtest.h>
+
+TEST(Test_case, first_test)
+{
+	EXPECT_EQ(1, 2);
+}
 
 Deque<int> something()
 {
@@ -17,9 +22,11 @@ Deque<int> something()
     return d;
 }
 
-int main()
+int main(int argc, char **argv)
 {
-    
+	testing::InitGoogleTest(&argc, argv);
+	RUN_ALL_TESTS();
+
     Deque<int> d;
     
     d = something();
@@ -29,11 +36,8 @@ int main()
     }
     cout << endl << endl;
     
-    //auto q = d.cbegin();
-    
-
     cout << "for (auto it = d.begin(); it != d.end(); it++)" << endl;
-    for (auto it = d.begin(); it != d.end(); it++)
+    for (auto it = d.begin(); it != d.end(); ++it)
         cout << *it << ' ';
     cout << endl;
 
@@ -62,8 +66,6 @@ int main()
         cout << d.back() << ' ';
         d.pop_back();
     }
-    
-    system("pause");   
-    
+	system("pause");
     return 0;
 }
