@@ -94,6 +94,11 @@ public:
         return *this;
     }
 
+    int operator - (const container_iterator& it)
+    {
+        return ptr - it.ptr;
+    }
+
     container_iterator& operator += (int f)
     {
         move_this(f);
@@ -125,12 +130,12 @@ public:
 
     bool operator < (const container_iterator &it) const
     {
-        return ptr < it.ptr;
+        return cur < it.cur;
     }
 
     bool operator > (const container_iterator &it) const
     {
-        return ptr > it.ptr;
+        return cur > it.cur;
     }
 
     bool operator >= (const container_iterator &it) const
@@ -171,12 +176,17 @@ template <typename T> class Deque
         return (tail - 1 + capacity) % capacity;
     }
 
+    T& getAt(int index)
+    {
+        return buf[(head + index) % capacity];
+    }
+
     void extendCapacity()
     {
         uint new_capacity = capacity << 1;
         unique_ptr<T[]> tmp = unique_ptr<T[]>(new T[new_capacity]);
         for (uint i = 0; i < capacity; i++)
-            tmp[i] = operator[](i);
+            tmp[i] = getAt(i);
         buf.swap(tmp);
         head = 0;
         tail = capacity;
@@ -186,13 +196,13 @@ template <typename T> class Deque
     {
         uint new_capacity = capacity >> 1;
         unique_ptr<T[]> tmp = unique_ptr<T[]>(new T[new_capacity]);
-        uint size = getSize();
+        uint cur_size = size();
         
-        for (uint i = 0; i < size; i++)
-            tmp[i] = operator[](i);
+        for (uint i = 0; i < cur_size; i++)
+            tmp[i] = getAt(i);
         buf.swap(tmp);
         head = 0;
-        tail = size;
+        tail = cur_size;
         capacity = new_capacity;
     }
 
@@ -256,11 +266,19 @@ public:
         return (tail == head);
     }
 
-    int getSize() const
+    int size() const
     {
         if (tail >= head)
-            return prevTail() - head + 1;
+            return tail - head;
         return (tail - head + capacity);
+    }
+
+    void clear()
+    {
+        unique_ptr<T[]> tmp = unique_ptr<T[]>(new T[base_capacity]);
+        buf.swap(tmp);
+        head = tail = 0;
+        capacity = base_capacity;
     }
 
     void push_back(T obj)
@@ -282,25 +300,25 @@ public:
     void pop_back()
     {
         tail = prevTail();
-        if (getSize() == capacity / 4 && capacity != base_capacity)
+        if (size() == capacity / 4 && capacity != base_capacity)
             compressCapacity();
     }
 
     void pop_front()
     {
         head = prevHead();
-        if (getSize() == capacity / 4 && capacity != base_capacity)
+        if (size() == capacity / 4 && capacity != base_capacity)
             compressCapacity();
     }
 
     const T back()
     {
-        return operator[](getSize() - 1);
+        return operator[](size() - 1);
     }
 
     const T back() const
     {
-        return operator[](getSize() - 1);
+        return operator[](size() - 1);
     }
 
     const T front()
@@ -315,16 +333,16 @@ public:
 
     T& operator[] (int index)
     {
-        if (index < 0 || index > getSize())
+        if (index < 0 || index > size())
             throw new exception();
-        return buf[(head + index) % capacity];
+        return getAt(index);
     }
 
     T& operator[] (int index) const
     {
-        if (index < 0 || index > getSize())
+        if (index < 0 || index > size())
             throw new exception();
-        return buf[(head + index) % capacity];
+        return getAt(index);
     }
 
     iterator begin()

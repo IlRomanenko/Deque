@@ -1,12 +1,4 @@
-#include "base.h"
 #include "deque.h"
-#include <vld.h>
-#include <gtest\gtest.h>
-
-TEST(Test_case, first_test)
-{
-	EXPECT_EQ(1, 2);
-}
 
 Deque<int> something()
 {
@@ -22,11 +14,9 @@ Deque<int> something()
     return d;
 }
 
+
 int main(int argc, char **argv)
 {
-	testing::InitGoogleTest(&argc, argv);
-	RUN_ALL_TESTS();
-
     Deque<int> d;
     
     d = something();
@@ -73,5 +63,6 @@ int main(int argc, char **argv)
         d.pop_back();
     }
 	system("pause");
+
     return 0;
 }
