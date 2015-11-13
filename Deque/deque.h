@@ -13,19 +13,20 @@ template <typename IteratorType> class container_iterator :
 private:
 
     IteratorType* ptr;
-    int cur, size;
+    int cur, size, pos;
 
     void move_this(int tsize)
     {
-        tsize %= size;
+        tsize -= (tsize / size) * size;
         ptr += tsize;
         cur += tsize;
-        if (cur >= size)
+        pos += tsize;
+        while (cur >= size)
         {
             cur -= size;
             ptr -= size;
         }
-        if (cur < 0)
+        while (cur < 0)
         {
             cur += size;
             ptr += size;
@@ -34,8 +35,8 @@ private:
 
 public:
 
-    container_iterator(IteratorType* n_ptr, uint head, uint capacity)
-        : ptr(n_ptr), cur(head), size(capacity)
+    container_iterator(IteratorType* n_ptr, uint pos_in_array, uint capacity, uint pos_in_container)
+        : ptr(n_ptr), cur(pos_in_array), size(capacity), pos(pos_in_container)
     {
     }
 
@@ -44,6 +45,7 @@ public:
         ptr = it.ptr;
         cur = it.cur;
         size = it.size;
+        pos = it.pos;
     }
 
     container_iterator(const container_iterator && it)
@@ -51,6 +53,16 @@ public:
         ptr = it.ptr;
         cur = it.cur;
         size = it.size;
+        pos = it.pos;
+    }
+
+    container_iterator& operator = (const container_iterator& it)
+    {
+        cur = it.cur;
+        size = it.size;
+        ptr = it.ptr;
+        pos = it.pos;
+        return *this;
     }
 
     IteratorType& operator *()
@@ -58,10 +70,11 @@ public:
         return *ptr;
     }
 
-    container_iterator& operator++(int)
+    container_iterator operator++(int)
     {
+        container_iterator new_it(*this);
         move_this(1);
-        return *this;
+        return new_it;
     }
 
     container_iterator& operator++()
@@ -76,27 +89,30 @@ public:
         return *this;
     }
 
-    container_iterator& operator -- (int)
+    container_iterator operator -- (int)
     {
+        container_iterator new_it(*this);
         move_this(-1);
-        return *this;
+        return new_it;
     }
 
-    container_iterator& operator + (int f)
+    container_iterator operator + (int f) const
     {
-        move_this(f);
-        return *this;
+        container_iterator new_it(*this);
+        new_it.move_this(f);
+        return new_it;
     }
 
-    container_iterator& operator - (int f)
+    container_iterator operator - (int f) const
     {
-        move_this(-f);
-        return *this;
+        container_iterator new_it(*this);
+        new_it.move_this(-f);
+        return new_it;
     }
 
     int operator - (const container_iterator& it)
     {
-        return ptr - it.ptr;
+        return pos - it.pos;
     }
 
     container_iterator& operator += (int f)
@@ -130,12 +146,12 @@ public:
 
     bool operator < (const container_iterator &it) const
     {
-        return cur < it.cur;
+        return pos < it.pos;
     }
 
     bool operator > (const container_iterator &it) const
     {
-        return cur > it.cur;
+        return pos > it.pos;
     }
 
     bool operator >= (const container_iterator &it) const
@@ -347,70 +363,70 @@ public:
 
     iterator begin()
     {
-        return iterator(buf.get() + head, head, capacity);
+        return iterator(buf.get() + head, head, capacity, 0);
     }
     iterator begin() const
     {
-        return iterator(buf.get() + head, head, capacity);
+        return iterator(buf.get() + head, head, capacity, 0);
     }
     iterator end()
     {
-        return iterator(buf.get() + tail, tail, capacity);
+        return iterator(buf.get() + tail, tail, capacity, tail);
     }
     iterator end() const
     {
-        return iterator(buf.get() + tail, tail, capacity);
+        return iterator(buf.get() + tail, tail, capacity, tail);
     }
 
     const_iterator cbegin()
     {
-        return const_iterator(buf.get() + head, head, capacity);
+        return const_iterator(buf.get() + head, head, capacity, 0);
     }
     const_iterator cbegin() const
     {
-        return const_iterator(buf.get() + head, head, capacity);
+        return const_iterator(buf.get() + head, head, capacity, 0);
     }
     const_iterator cend()
     {
-        return const_iterator(buf.get() + tail, tail, capacity);
+        return const_iterator(buf.get() + tail, tail, capacity, tail);
     }
     const_iterator cend() const
     {
-        return const_iterator(buf.get() + tail, tail, capacity);
+        return const_iterator(buf.get() + tail, tail, capacity, tail);
     }
 
     reverse_iterator rbegin()
     {
-        return reverse_iterator(iterator(buf.get() + tail, tail, capacity));
+        return reverse_iterator(iterator(buf.get() + tail, tail, capacity, tail));
     }
     reverse_iterator rbegin() const
     {
-        return reverse_iterator(iterator(buf.get() + tail, tail, capacity));
+        return reverse_iterator(iterator(buf.get() + tail, tail, capacity, tail));
     }
     reverse_iterator rend()
     {
-        return reverse_iterator(iterator(buf.get() + head, head, capacity));
+        return reverse_iterator(iterator(buf.get() + head, head, capacity, 0));
     }
     reverse_iterator rend() const
     {
-        return reverse_iterator(iterator(buf.get() + head, head, capacity));
+        return reverse_iterator(iterator(buf.get() + head, head, capacity, 0));
     }
 
     const_reverse_iterator crbegin()
     {
-        return const_reverse_iterator(const_iterator(buf.get() + tail, tail, capacity));
+        return const_reverse_iterator(const_iterator(buf.get() + tail, tail, capacity, tail));
     }
     const_reverse_iterator crbegin() const
     {
-        return const_reverse_iterator(const_iterator(buf.get() + tail, tail, capacity));
+        return const_reverse_iterator(const_iterator(buf.get() + tail, tail, capacity, tail));
     }
     const_reverse_iterator crend()
     {
-        return const_reverse_iterator(const_iterator(buf.get() + head, head, capacity));
+        return const_reverse_iterator(const_iterator(buf.get() + head, head, capacity, 0));
     }
     const_reverse_iterator crend() const
     {
-        return const_reverse_iterator(const_iterator(buf.get() + head, head, capacity));
+        return const_reverse_iterator(const_iterator(buf.get() + head, head, capacity, 0));
     }
 
     ~Deque()

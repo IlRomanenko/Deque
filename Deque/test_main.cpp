@@ -35,8 +35,8 @@ public:
 TEST_F(DequeTest, EmptyInitializer)
 {
     EXPECT_EQ(0, deque_int.size());
-    for_each(deque_int.begin(), deque_int.end(), 
-        [](int elem) 
+    for_each(deque_int.begin(), deque_int.end(),
+        [](int elem)
     {
         EXPECT_EQ(0, elem);
     });
@@ -147,7 +147,7 @@ TEST_F(DequeTest, Correct_reverse_iterator_1e3)
     int pos = (int)v.size() - 1;
     for (auto it = deque_int.rbegin(); it != deque_int.rend(); it++, pos--)
         EXPECT_EQ(v[pos], *it);
-    
+
     pos = (int)v.size() - 1;
     for (auto it = deque_int.crbegin(); it != deque_int.crend(); it++, pos--)
         EXPECT_EQ(v[pos], *it);
@@ -217,25 +217,151 @@ TEST_F(DequeTest, Correct_size)
 
 TEST_F(DequeTest, LinearTime_1e6)
 {
+    chrono::steady_clock clock;
 
+    int maxn = 1000 * 1000;
+
+    vector<int> vector_int;
+
+    for (int size = 10; size <= maxn; size *= 10)
+    {
+        auto before_deque_push = clock.now();
+        fori(i, maxn)
+            deque_int.push_back(random(engine));
+        while (!deque_int.empty())
+            deque_int.pop_back();
+        auto deque_after_pop_back = clock.now();
+
+        
+
+        auto before_vector_push = clock.now();
+        fori(i, maxn)
+            vector_int.push_back(random(engine));
+        while (!deque_int.empty())
+            vector_int.pop_back();
+        auto vector_after_pop_back = clock.now();
+
+        auto deque_duration = deque_after_pop_back - before_deque_push;
+        auto vector_duration = vector_after_pop_back - before_vector_push;
+
+        cout << "Size = " << to_string(size) << endl;
+        cout << "deque_duration / vector_duration = " << deque_duration.count() / (double)vector_duration.count() << endl;
+    }
+    cout << endl;
+}
+
+TEST_F(DequeTest, ReverseDeque_small)
+{
+    deque_int.push_back(10);
+    deque_int.push_back(20);
+    deque_int.push_front(30);
+
+    //30, 10, 20
+    reverse(deque_int.begin(), deque_int.end());
+    //20, 10, 30
+
+    const int maxn = 200;
+    fori(i, maxn)
+        deque_int.push_back(i * 2 + 1);
+
+    //20, 10, 30, 1, 3, 5, 7, 9, ...
+    reverse(deque_int.begin(), deque_int.end());
+
+    // ..., 9, 7, 5, 3, 1, 30, 10, 20
+    fori(i, maxn)
+    {
+        EXPECT_EQ(i * 2 + 1, deque_int[maxn - i - 1]);
+    }
+}
+
+TEST_F(DequeTest, SortDeque)
+{
     const int maxn = 1000 * 1000;
-    fori(i, maxn)
-        deque_int.push_back(random(engine));
-    while (!deque_int.empty())
-        deque_int.pop_back();
-    
-    EXPECT_EQ(0, deque_int.size());
 
-    fori(i, maxn)
-        deque_int.push_front(random(engine));
-    while (!deque_int.empty())
-        deque_int.pop_front();
+    for (int size = 10; size <= maxn; size *= 10)
+    {
+        int elem;
+        vector<int> temp_v;
+        fori(i, size)
+        {
+            elem = random(engine);
+            deque_int.push_back(elem);
+            temp_v.push_back(elem);
+        }
 
-    EXPECT_EQ(0, deque_int.size());
+        EXPECT_EQ(temp_v.size(), deque_int.size());
+
+        chrono::steady_clock clock;
+
+        auto before_vector_sort = clock.now();
+        sort(temp_v.begin(), temp_v.end());
+        auto after_vector_sort = clock.now();
+
+        auto before_deque_sort = clock.now();
+        sort(deque_int.begin(), deque_int.end());
+        auto after_deque_sort = clock.now();
+
+        auto deque_duration = after_deque_sort - before_deque_sort;
+        auto vector_duration = after_vector_sort - before_vector_sort;
+
+        cout << "Size = " << to_string(size) << endl;
+        cout << "deque_duration / vector_duration = " << deque_duration.count() / (double)vector_duration.count() << endl;
+        
+
+        EXPECT_EQ(temp_v.size(), deque_int.size());
+
+        while (!temp_v.empty() && !deque_int.empty())
+        {
+            EXPECT_EQ(temp_v.back(), deque_int.back());
+            temp_v.pop_back();
+            deque_int.pop_back();
+        }
+        EXPECT_EQ(temp_v.size(), deque_int.size());
+    }
+    cout << endl;
+}
+
+TEST_F(DequeTest, LinearTime_1e6_clear_inside)
+{
+    chrono::steady_clock clock;
+
+    int maxn = 1000 * 1000;
+
+    vector<int> vector_int;
+
+    cout.setf(cout.fixed);
+    cout.precision(9);
+
+    for (int size = 10; size <= maxn; size *= 10)
+    {
+        auto before_deque_push = clock.now();
+        fori(i, maxn)
+            deque_int.push_back(random(engine));
+        deque_int.clear();
+        auto deque_after_pop_back = clock.now();
+
+
+
+        auto before_vector_push = clock.now();
+        fori(i, maxn)
+            vector_int.push_back(random(engine));
+        vector_int.clear();
+        auto vector_after_pop_back = clock.now();
+
+        auto deque_duration = deque_after_pop_back - before_deque_push;
+        auto vector_duration = vector_after_pop_back - before_vector_push;
+
+        cout << "Size = " << to_string(size) << endl;
+        cout << "deque_duration / vector_duration = " << deque_duration.count() / (double)vector_duration.count() << endl;
+    }
+    cout << endl;
 }
 
 int main(int argc, char **argv)
 {
+    cout.setf(cout.fixed);
+    cout.precision(9);
+
     testing::InitGoogleTest(&argc, argv);
 
     RUN_ALL_TESTS();
