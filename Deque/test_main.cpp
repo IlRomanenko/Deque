@@ -226,7 +226,7 @@ TEST_F(DequeTest, LinearTime_1e6)
     for (int size = 10; size <= maxn; size *= 10)
     {
         auto before_deque_push = clock.now();
-        fori(i, maxn)
+        fori(i, size)
             deque_int.push_back(random(engine));
         while (!deque_int.empty())
             deque_int.pop_back();
@@ -235,7 +235,7 @@ TEST_F(DequeTest, LinearTime_1e6)
         
 
         auto before_vector_push = clock.now();
-        fori(i, maxn)
+        fori(i, size)
             vector_int.push_back(random(engine));
         while (!deque_int.empty())
             vector_int.pop_back();
@@ -244,10 +244,15 @@ TEST_F(DequeTest, LinearTime_1e6)
         auto deque_duration = deque_after_pop_back - before_deque_push;
         auto vector_duration = vector_after_pop_back - before_vector_push;
 
-        cout << "Size = " << to_string(size) << endl;
-        cout << "deque_duration / vector_duration = " << deque_duration.count() / (double)vector_duration.count() << endl;
+        cerr << endl;
+        cerr << "Size = " << to_string(size) << endl;
+        cerr << "deque_duration / vector_duration = " << deque_duration.count() / (double)vector_duration.count() << endl;
+        cerr << "deque_time = " << deque_duration.count() / (1000 * 1000.0) << " ms" << endl;
+        cerr << "vector_time = " << vector_duration.count() / (1000 * 1000.0) << " ms" << endl;
+        cerr << "relative_time = " << deque_duration.count() / (double)size / (1000 * 1000.0) << " ms" << endl;
+        cerr << endl;
     }
-    cout << endl;
+    cerr << endl;
 }
 
 TEST_F(DequeTest, ReverseDeque_small)
@@ -278,7 +283,7 @@ TEST_F(DequeTest, SortDeque)
 {
     const int maxn = 1000 * 1000;
 
-    for (int size = 10; size <= maxn; size *= 10)
+    for (int size = 10; size < maxn; size *= 10)
     {
         int elem;
         vector<int> temp_v;
@@ -304,8 +309,12 @@ TEST_F(DequeTest, SortDeque)
         auto deque_duration = after_deque_sort - before_deque_sort;
         auto vector_duration = after_vector_sort - before_vector_sort;
 
-        cout << "Size = " << to_string(size) << endl;
-        cout << "deque_duration / vector_duration = " << deque_duration.count() / (double)vector_duration.count() << endl;
+        cerr << endl;
+        cerr << "Size = " << to_string(size) << endl;
+        cerr << "deque_duration / vector_duration = " << deque_duration.count() / (double)vector_duration.count() << endl;
+        cerr << "deque_time = " << deque_duration.count() / (1000 * 1000.0) << " ms" << endl;
+        cerr << "vector_time = " << vector_duration.count() / (1000 * 1000.0) << " ms" << endl;
+        cerr << endl;
         
 
         EXPECT_EQ(temp_v.size(), deque_int.size());
@@ -318,7 +327,57 @@ TEST_F(DequeTest, SortDeque)
         }
         EXPECT_EQ(temp_v.size(), deque_int.size());
     }
-    cout << endl;
+    cerr << endl;
+}
+
+TEST_F(DequeTest, SortDeque_ReverseOrder)
+{
+    const int maxn = 1000 * 1000;
+
+    for (int size = 10; size < maxn; size *= 10)
+    {
+        int elem;
+        vector<int> temp_v;
+        fori(i, size)
+        {
+            elem = random(engine);
+            deque_int.push_back(elem);
+            temp_v.push_back(elem);
+        }
+
+        EXPECT_EQ(temp_v.size(), deque_int.size());
+
+        chrono::steady_clock clock;
+
+        auto before_vector_sort = clock.now();
+        sort(temp_v.rbegin(), temp_v.rend());
+        auto after_vector_sort = clock.now();
+
+        auto before_deque_sort = clock.now();
+        sort(deque_int.rbegin(), deque_int.rend());
+        auto after_deque_sort = clock.now();
+
+        auto deque_duration = after_deque_sort - before_deque_sort;
+        auto vector_duration = after_vector_sort - before_vector_sort;
+
+        cerr << endl;
+        cerr << "Size = " << to_string(size) << endl;
+        cerr << "deque_duration / vector_duration = " << deque_duration.count() / (double)vector_duration.count() << endl;
+        cerr << "deque_time = " << deque_duration.count() / (1000*1000.0) << " ms" << endl;
+        cerr << "vector_time = " << vector_duration.count() / (1000 * 1000.0) << " ms" << endl;
+        cerr << endl;
+
+        EXPECT_EQ(temp_v.size(), deque_int.size());
+
+        while (!temp_v.empty() && !deque_int.empty())
+        {
+            EXPECT_EQ(temp_v.back(), deque_int.back());
+            temp_v.pop_back();
+            deque_int.pop_back();
+        }
+        EXPECT_EQ(temp_v.size(), deque_int.size());
+    }
+    cerr << endl;
 }
 
 TEST_F(DequeTest, LinearTime_1e6_clear_inside)
@@ -329,13 +388,10 @@ TEST_F(DequeTest, LinearTime_1e6_clear_inside)
 
     vector<int> vector_int;
 
-    cout.setf(cout.fixed);
-    cout.precision(9);
-
     for (int size = 10; size <= maxn; size *= 10)
     {
         auto before_deque_push = clock.now();
-        fori(i, maxn)
+        fori(i, size)
             deque_int.push_back(random(engine));
         deque_int.clear();
         auto deque_after_pop_back = clock.now();
@@ -343,7 +399,7 @@ TEST_F(DequeTest, LinearTime_1e6_clear_inside)
 
 
         auto before_vector_push = clock.now();
-        fori(i, maxn)
+        fori(i, size)
             vector_int.push_back(random(engine));
         vector_int.clear();
         auto vector_after_pop_back = clock.now();
@@ -351,16 +407,21 @@ TEST_F(DequeTest, LinearTime_1e6_clear_inside)
         auto deque_duration = deque_after_pop_back - before_deque_push;
         auto vector_duration = vector_after_pop_back - before_vector_push;
 
-        cout << "Size = " << to_string(size) << endl;
-        cout << "deque_duration / vector_duration = " << deque_duration.count() / (double)vector_duration.count() << endl;
+        cerr << endl;
+        cerr << "Size = " << to_string(size) << endl;
+        cerr << "deque_duration / vector_duration = " << deque_duration.count() / (double)vector_duration.count() << endl;
+        cerr << "deque_time = " << deque_duration.count() / (1000 * 1000.0) << " ms" << endl;
+        cerr << "vector_time = " << vector_duration.count() / (1000 * 1000.0) << " ms" << endl;
+        cerr << "relative_time = " << deque_duration.count() / (double)size / (1000 * 1000.0) << " ms" << endl;
+        cerr << endl;
     }
-    cout << endl;
+    cerr << endl;
 }
 
 int main(int argc, char **argv)
 {
-    cout.setf(cout.fixed);
-    cout.precision(9);
+    cerr.setf(cerr.fixed);
+    cerr.precision(9);
 
     testing::InitGoogleTest(&argc, argv);
 
