@@ -2,28 +2,43 @@
 #include "base.h"
 #include <vector>
 #include <iterator>
+#include <algorithm>
 
 const uint base_capacity = 8;
-
 template <typename T> class Deque;
 
-
-template <typename IteratorType, typename ContainerType> class container_iterator :
+template <typename IteratorType> class container_iterator :
     public iterator<random_access_iterator_tag, IteratorType>
 {
 private:
-    friend class Deque<ContainerType>;
 
     IteratorType* ptr;
     int cur, size;
 
-    container_iterator(IteratorType* n_ptr, uint head, uint capacity) 
+    void move_this(int tsize)
+    {
+        tsize %= size;
+        ptr += tsize;
+        cur += tsize;
+        if (cur >= size)
+        {
+            cur -= size;
+            ptr -= size;
+        }
+        if (cur < 0)
+        {
+            cur += size;
+            ptr += size;
+        }
+    }
+
+public:
+
+    container_iterator(IteratorType* n_ptr, uint head, uint capacity)
         : ptr(n_ptr), cur(head), size(capacity)
     {
     }
 
-public:
-    
     container_iterator(const container_iterator &it)
     {
         ptr = it.ptr;
@@ -45,50 +60,57 @@ public:
 
     container_iterator& operator++(int)
     {
-        ptr++;
-        cur++;
-        if (cur == size)
-        {
-            ptr -= size;
-            cur -= size;
-        }
+        move_this(1);
         return *this;
     }
 
     container_iterator& operator++()
     {
-        ptr++;
-        cur++;
-        if (cur >= size)
-        {
-            ptr -= (cur / size) * size;
-            cur -= (cur / size) * size;
-        }
+        move_this(1);
         return *this;
     }
 
-    container_iterator& operator--()
+    container_iterator& operator -- ()
     {
-        ptr--;
-        cur--;
-        if (cur < 0)
-        {
-            ptr += size;
-            cur += size;
-        }
+        move_this(-1);
         return *this;
     }
 
-    container_iterator& operator--(int)
+    container_iterator& operator -- (int)
     {
-        ptr--;
-        cur--;
-        if (cur < 0)
-        {
-            ptr += size;
-            cur += size;
-        }
+        move_this(-1);
         return *this;
+    }
+
+    container_iterator& operator + (int f)
+    {
+        move_this(f);
+        return *this;
+    }
+
+    container_iterator& operator - (int f)
+    {
+        move_this(-f);
+        return *this;
+    }
+
+    container_iterator& operator += (int f)
+    {
+        move_this(f);
+        return *this;
+    }
+
+    container_iterator& operator -= (int f)
+    {
+        move_this(-f);
+        return *this;
+    }
+
+    IteratorType& operator [] (int f)
+    {
+        container_iterator new_q(*this);
+        new_q += f;
+        return *new_q;
     }
 
     bool operator != (const container_iterator &it) const
@@ -101,8 +123,29 @@ public:
         return ptr == it.ptr;
     }
 
+    bool operator < (const container_iterator &it) const
+    {
+        return ptr < it.ptr;
+    }
+
+    bool operator > (const container_iterator &it) const
+    {
+        return ptr > it.ptr;
+    }
+
+    bool operator >= (const container_iterator &it) const
+    {
+        return (*this > it || *this == it);
+    }
+
+    bool operator <= (const container_iterator &it) const
+    {
+        return (*this < it || *this == it);
+    }
+
     ~container_iterator()
     {
+
     }
 };
 
@@ -133,7 +176,7 @@ template <typename T> class Deque
         uint new_capacity = capacity << 1;
         unique_ptr<T[]> tmp = unique_ptr<T[]>(new T[new_capacity]);
         for (uint i = 0; i < capacity; i++)
-            tmp[i] = this->operator[](i);
+            tmp[i] = operator[](i);
         buf.swap(tmp);
         head = 0;
         tail = capacity;
@@ -144,8 +187,9 @@ template <typename T> class Deque
         uint new_capacity = capacity >> 1;
         unique_ptr<T[]> tmp = unique_ptr<T[]>(new T[new_capacity]);
         uint size = getSize();
+        
         for (uint i = 0; i < size; i++)
-            tmp[i] = this->operator[](i);
+            tmp[i] = operator[](i);
         buf.swap(tmp);
         head = 0;
         tail = size;
@@ -154,23 +198,20 @@ template <typename T> class Deque
 
 public:
 
-    typedef container_iterator<T, T>       iterator;
-    typedef container_iterator<const T, T> const_iterator;
-    
+    typedef container_iterator<T>       iterator;
+    typedef container_iterator<const T> const_iterator;
+
     typedef reverse_iterator<const_iterator>  const_reverse_iterator;
     typedef reverse_iterator<iterator>        reverse_iterator;
 
-    //const_reverse_iterator <~> reverse_iterator<container_iterator<const T, T> >
-
-    Deque() 
+    Deque()
         : capacity(base_capacity), head(0), tail(0)
     {
         buf.reset();
         buf = unique_ptr<T[]>(new T[capacity]);
-        dbg("Deque<T>");
     }
 
-    Deque(uint user_capacity) 
+    Deque(uint user_capacity)
         : head(0), tail(0)
     {
         buf.reset();
@@ -180,26 +221,22 @@ public:
         buf = unique_ptr<T[]>(new T[capacity]);
     }
 
-    Deque(const Deque & obj) 
+    Deque(const Deque & obj)
         : capacity(obj.capacity), head(obj.head), tail(obj.tail)
     {
         buf.reset();
         buf = new T[capacity];
         for (uint i = 0; i < capacity; i++)
             buf[i] = obj.buf[i];
-
-        dbg("Deque(const Deque<T> & obj)");
     }
 
-    Deque(Deque && obj) 
+    Deque(Deque && obj)
     {
         buf.reset();
         buf.swap(obj.buf);
         capacity = obj.capacity;
         head = obj.head;
         tail = obj.tail;
-
-        dbg("Deque(Deque<T> && obj)");
     }
 
     Deque& operator = (const Deque & obj)
@@ -211,8 +248,6 @@ public:
         buf = unique_ptr<T[]>(new T[capacity]);
         for (uint i = 0; i < capacity; i++)
             buf[i] = obj.buf[i];
-
-        dbg("Deque<T>& operator = (const Deque<T> & obj)");
         return *this;
     }
 
@@ -260,38 +295,37 @@ public:
 
     const T back()
     {
-        return this->operator[](getSize() - 1);
+        return operator[](getSize() - 1);
     }
 
     const T back() const
     {
-        return this->operator[](getSize() - 1);
+        return operator[](getSize() - 1);
     }
 
     const T front()
     {
-        return this->operator[](0);
+        return operator[](0);
     }
 
     const T front() const
     {
-        return this->operator[](0);
+        return operator[](0);
     }
 
     T& operator[] (int index)
     {
-        if (index < 0 || index > getSize()) 
+        if (index < 0 || index > getSize())
             throw new exception();
         return buf[(head + index) % capacity];
     }
 
-    T& operator[] (int index) const 
+    T& operator[] (int index) const
     {
-        if (index < 0 || index > getSize()) 
+        if (index < 0 || index > getSize())
             throw new exception();
         return buf[(head + index) % capacity];
     }
-
 
     iterator begin()
     {
@@ -360,7 +394,6 @@ public:
     {
         return const_reverse_iterator(const_iterator(buf.get() + head, head, capacity));
     }
-
 
     ~Deque()
     {

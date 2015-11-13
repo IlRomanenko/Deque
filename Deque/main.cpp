@@ -18,7 +18,7 @@ Deque<int> something()
 
     fori(i, 10)
         d.push_front(2 * (-i) + 1);
-    
+
     return d;
 }
 
@@ -57,7 +57,13 @@ int main(int argc, char **argv)
         cout << *it << ' ';
     cout << endl;
     
-    
+    cout << "fori(i, 30) { cout << d.begin()[i] << ' '; }" << endl;
+    fori(i, 30)
+    {
+        cout << d.begin()[i] << ' ';
+    }
+    cout << endl;
+
     
     cout << endl << endl;
     

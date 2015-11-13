@@ -1,4 +1,5 @@
 #pragma once
+#define _VARIADIC_MAX 10
 #include <iostream>
 #include <fstream>
 #include <memory>
