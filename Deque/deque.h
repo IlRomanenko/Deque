@@ -70,6 +70,11 @@ public:
         return *ptr;
     }
 
+    const IteratorType& operator *() const
+    {
+        return *ptr;
+    }
+
     container_iterator operator++(int)
     {
         container_iterator new_it(*this);
@@ -354,7 +359,7 @@ public:
         return getAt(index);
     }
 
-    T& operator[] (int index) const
+    const T& operator[] (int index) const
     {
         if (index < 0 || index > size())
             throw new exception();
@@ -365,17 +370,17 @@ public:
     {
         return iterator(buf.get() + head, head, capacity, 0);
     }
-    iterator begin() const
+    const_iterator begin() const
     {
-        return iterator(buf.get() + head, head, capacity, 0);
+        return const_iterator(buf.get() + head, head, capacity, 0);
     }
     iterator end()
     {
         return iterator(buf.get() + tail, tail, capacity, tail);
     }
-    iterator end() const
+    const_iterator end() const
     {
-        return iterator(buf.get() + tail, tail, capacity, tail);
+        return const_iterator(buf.get() + tail, tail, capacity, tail);
     }
 
     const_iterator cbegin()
@@ -399,17 +404,17 @@ public:
     {
         return reverse_iterator(iterator(buf.get() + tail, tail, capacity, tail));
     }
-    reverse_iterator rbegin() const
+    const_reverse_iterator rbegin() const
     {
-        return reverse_iterator(iterator(buf.get() + tail, tail, capacity, tail));
+        return const_reverse_iterator(iterator(buf.get() + tail, tail, capacity, tail));
     }
     reverse_iterator rend()
     {
         return reverse_iterator(iterator(buf.get() + head, head, capacity, 0));
     }
-    reverse_iterator rend() const
+    const_reverse_iterator rend() const
     {
-        return reverse_iterator(iterator(buf.get() + head, head, capacity, 0));
+        return const_reverse_iterator(iterator(buf.get() + head, head, capacity, 0));
     }
 
     const_reverse_iterator crbegin()

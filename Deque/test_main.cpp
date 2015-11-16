@@ -2,7 +2,6 @@
 #include <gtest/gtest.h>
 #include <random>
 #include <chrono>
-
 #include "base.h"
 #include "deque.h"
 
@@ -31,6 +30,19 @@ public:
             deque_int.push_back(random(engine));
     }
 };
+
+TEST_F(DequeTest, VectorInit)
+{
+    for (int i = 0; i < 100; i++)
+        deque_int.push_back(2 * i + 1);
+    vector<int> v(deque_int.begin(), deque_int.end());
+    
+    sort(v.rbegin(), v.rend());
+    for (int i = 0; i < 300; i++)
+        deque_int.push_back(2 * i + 1);
+
+    cout << v[0] << endl;
+}
 
 TEST_F(DequeTest, EmptyInitializer)
 {
